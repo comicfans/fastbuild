@@ -251,8 +251,8 @@ private:
 
     void AddNode( Node * node );
 
-    void BuildRecurse( Node * nodeToBuild, uint32_t cost );
-    bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost );
+    void BuildRecurse( Node * nodeToBuild, uint32_t cost ,int depth);
+    bool CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost ,int depth);
     static void UpdateBuildStatusRecurse( const Node * node,
                                           uint32_t & nodesBuiltTime,
                                           uint32_t & totalNodeTime );

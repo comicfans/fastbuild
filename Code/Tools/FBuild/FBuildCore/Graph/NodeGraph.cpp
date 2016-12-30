@@ -1126,7 +1126,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
             }
             if ( n->GetState() != Node::BUILDING )
             {
-                BuildRecurse( n, 0 );
+                BuildRecurse( n, 0 ,0);
 
                 // check for nodes that become up-to-date immediately (trivial build)
                 if ( n->GetState() == Node::UP_TO_DATE )
@@ -1147,7 +1147,7 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
     {
         if ( nodeToBuild->GetState() < Node::BUILDING )
         {
-            BuildRecurse( nodeToBuild, 0 );
+            BuildRecurse( nodeToBuild, 0 ,0);
         }
     }
 
@@ -1157,12 +1157,15 @@ void NodeGraph::DoBuildPass( Node * nodeToBuild )
 
 // BuildRecurse
 //------------------------------------------------------------------------------
-void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
+void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost ,int depth)
 {
     ASSERT( nodeToBuild );
 
     // already building, or queued to build?
     ASSERT( nodeToBuild->GetState() != Node::BUILDING );
+
+    std::string p(depth,'-');
+    printf("%s%s needs build",p.c_str(),nodeToBuild->GetName().Get());
 
     // accumulate recursive cost
     cost += nodeToBuild->GetLastBuildTime();
@@ -1171,7 +1174,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::NOT_PROCESSED )
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost );
+        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetPreBuildDependencies(), cost ,depth+1);
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1188,7 +1191,7 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     if ( nodeToBuild->GetState() == Node::PRE_DEPS_READY )
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost );
+        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetStaticDependencies(), cost ,depth+1);
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1218,7 +1221,8 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
     // dynamic deps
     {
         // all static deps done?
-        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost );
+        FLog::Info("%scheck dynamic deps for %s",p.c_str(),nodeToBuild->GetName().Get());
+        bool allDependenciesUpToDate = CheckDependencies( nodeToBuild, nodeToBuild->GetDynamicDependencies(), cost ,depth+1);
         if ( allDependenciesUpToDate == false )
         {
             return; // not ready or failed
@@ -1242,9 +1246,12 @@ void NodeGraph::BuildRecurse( Node * nodeToBuild, uint32_t cost )
 
 // CheckDependencies
 //------------------------------------------------------------------------------
-bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost )
+bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & dependencies, uint32_t cost ,int depth)
 {
     ASSERT( nodeToBuild->GetType() != Node::PROXY_NODE );
+
+    std::string p(depth,'-');
+    FLog::Info("%scheck deps for %s",p.c_str(),nodeToBuild->GetName().Get());
 
     const uint32_t passTag = s_BuildPassTag;
 
@@ -1270,7 +1277,7 @@ bool NodeGraph::CheckDependencies( Node * nodeToBuild, const Dependencies & depe
                 // prevent multiple recursions in this pass
                 n->SetBuildPassTag( passTag );
 
-                BuildRecurse( n, cost );
+                BuildRecurse( n, cost ,depth+1);
             }
         }
 
