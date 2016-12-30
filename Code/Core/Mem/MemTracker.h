@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 #ifdef DEBUG
     #if !defined( __APPLE__ ) // TODO:MAC Fix MemTracker
-        #define MEMTRACKER_ENABLED
+//        #define MEMTRACKER_ENABLED
     #endif
 #endif
 

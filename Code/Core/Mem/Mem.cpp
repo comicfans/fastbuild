@@ -115,7 +115,7 @@ void Free( void * ptr )
 
 // Operators
 //------------------------------------------------------------------------------
-#if defined( __OSX__ )
+#if 1
     // TODO: resolve issue with Clang and inline new/delete
 #else
     #if defined( MEMTRACKER_ENABLED )

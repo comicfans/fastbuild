@@ -9,15 +9,10 @@
 
 // Placement new/delete
 //------------------------------------------------------------------------------
-#define INPLACE_NEW new
-inline void * operator new( size_t, void * ptr ) { return ptr; }
-inline void * operator new[]( size_t, void * ptr ) { return ptr; }
-inline void operator delete( void *, void * ) {}
-inline void operator delete[]( void *, void * ) {}
 
 // new/delete
 //------------------------------------------------------------------------------
-#if defined( MEMTRACKER_ENABLED )
+#if 0
     #define FNEW( code )        new ( __FILE__, __LINE__ ) code
     #define FNEW_ARRAY( code )  new ( __FILE__, __LINE__ ) code
     #define FDELETE             delete
@@ -45,7 +40,7 @@ void Free( void * ptr );
 
 // global new/delete
 //------------------------------------------------------------------------------
-#if defined( __OSX__ )
+#if 1
     // TODO: resolve issue with Clang and inline new/delete
 #else
     #if defined( MEMTRACKER_ENABLED )

@@ -2,6 +2,8 @@
 //------------------------------------------------------------------------------
 #pragma once
 
+#include <new>
+
 // Includes
 //------------------------------------------------------------------------------
 #include "Core/Containers/Sort.h"
@@ -104,7 +106,7 @@ Array< T >::Array()
 template < class T >
 Array< T >::Array( const Array< T > & other )
 {
-    INPLACE_NEW (this) Array( other.GetSize(), true );
+    new (this) Array( other.GetSize(), true );
     *this = other;
 }
 
@@ -114,7 +116,7 @@ template < class T >
 Array< T >::Array( const T * begin, const T * end )
 {
     const size_t size = ( end - begin );
-    INPLACE_NEW (this) Array( size, true );
+    new ((void*)this) Array<T>( size, true );
     Append( begin, end );
 }
 
@@ -188,7 +190,7 @@ void Array< T >::SetCapacity( size_t capacity )
     {
         if ( src < keepEnd )
         {
-            INPLACE_NEW ( dst ) T( *src );
+            new ( dst ) T( *src );
         }
         src->~T();
         src++;
@@ -245,7 +247,7 @@ void Array< T >::SetSize( size_t size )
     T * newEnd = m_Begin + size;
     while( item < newEnd )
     {
-        INPLACE_NEW ( item ) T;
+        new ( item ) T;
         item++;
     }
     m_End = newEnd;
@@ -334,7 +336,7 @@ void Array< T >::Append( const T & item )
     {
         Grow();
     }
-    INPLACE_NEW ( m_End ) T( item );
+    new ( m_End ) T( item );
     m_End++;
 }
 
@@ -440,7 +442,7 @@ Array< T > & Array< T >::operator = ( const Array< T > & other )
     const T * end = m_End;
     while ( dst < end )
     {
-        INPLACE_NEW ( dst ) T( *src );
+        new ( dst ) T( *src );
         dst++;
         src++;
     }
@@ -465,7 +467,7 @@ void Array< T >::Grow()
     T * dst = newMem;
     while ( src < m_End )
     {
-        INPLACE_NEW ( dst ) T( *src );
+        new ( dst ) T( *src );
         src->~T();
         dst++;
         src++;

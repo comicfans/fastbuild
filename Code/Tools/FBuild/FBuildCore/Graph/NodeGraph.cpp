@@ -5,6 +5,9 @@
 //------------------------------------------------------------------------------
 #include "Tools/FBuild/FBuildCore/PrecompiledHeader.h"
 
+#include <memory>
+#include <functional>
+
 #include "NodeGraph.h"
 
 #include "Tools/FBuild/FBuildCore/BFF/BFFParser.h"
