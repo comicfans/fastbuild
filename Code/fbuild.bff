@@ -375,6 +375,8 @@ Compiler( 'Compiler-x64-OSX' )
                             + ' -Wall -Werror -Wfatal-errors'   // warnings as errors
                             + ' -Wextra'
                             + ' -m64'                           // x86-64
+                            + ' -fsanitize=address '
+                            + ' -fsanitize-coverage=trace-pc '                           // x86-64
 
     .CompilerOptionsC       = .BaseCompilerOptions
     .CompilerOptions        = .BaseCompilerOptions
@@ -408,8 +410,12 @@ Compiler( 'Compiler-x64-OSX' )
     .Config                 = 'Debug'
     .CompilerOptions        + ' -DDEBUG -DPROFILING_ENABLED'
                             + .CompilerDebugOptimizations
+                            + ' -fsanitize=address '
+                            + '-fsanitize-coverage=trace-pc '
     .LibrarianOptions       + .LibrarianDebugOptimizations
     .LinkerOptions          + .LinkerDebugOptimizations
+                            + ' -fsanitize=address '
+                            + '-fsanitize-coverage=trace-pc '
 ]
 .X64ReleaseConfig_Linux =
 [

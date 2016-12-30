@@ -126,7 +126,8 @@
                                             'LZ4-Lib-$Platform$-$Config$'
                                           }
             .LinkerOutput               = '$OutputBase$\Tools\FBuild\FBuildWorker\fbuildworker'
-            .LinkerOptions              + ' -pthread -ldl -lrt'
+            .LinkerOptions              + ' -pthread -ldl -lrt -fsanitize=address '
+                                        + ' -fsanitize-coverage=trace-pc '
         }
         Alias( '$ProjectName$-$Platform$-$Config$' ) { .Targets = '$ProjectName$-Exe-$Platform$-$Config$' }
     }

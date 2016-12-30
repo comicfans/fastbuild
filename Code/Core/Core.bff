@@ -90,6 +90,8 @@
         {
             // Input (Unity)
             .CompilerInputUnity         = '$ProjectName$-Unity-Linux'
+            .CompileOptions             = ' -fsanitize=address '
+                                        + ' -fsanitiz-coverage=trace-pc '
 
             // Output
             .CompilerOutputPath         = '$OutputBase$\$ProjectName$\'
