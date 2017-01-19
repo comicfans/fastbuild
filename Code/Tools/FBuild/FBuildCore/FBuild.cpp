@@ -305,6 +305,10 @@ struct SaveTrigger
 {
     FBuild *instance;
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 6011)
+#endif
     ~SaveTrigger()
     {
         ASSERT(instance);
@@ -314,6 +318,9 @@ struct SaveTrigger
             instance->SaveDependencyGraph( instance->m_DependencyGraphFile.Get() );
         }
     }
+#ifdef _MSVC_VER
+#pragma warning( pop )
+#endif
 };
 
 // Build
