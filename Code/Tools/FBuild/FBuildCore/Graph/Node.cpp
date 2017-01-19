@@ -1009,3 +1009,8 @@ bool Node::InitializePreBuildDependencies( NodeGraph & nodeGraph, const BFFItera
 }
 
 //------------------------------------------------------------------------------
+    
+bool Node::IsGenerator() const
+{
+    return false;
+}
