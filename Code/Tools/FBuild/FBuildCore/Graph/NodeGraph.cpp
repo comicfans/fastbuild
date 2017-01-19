@@ -63,6 +63,7 @@
 //------------------------------------------------------------------------------
 NodeGraph::NodeGraph()
 : m_AllNodes( 1024, true )
+, m_GeneratorNodes( 1, true )
 , m_NextNodeIndex( 0 )
 , m_UsedFiles( 16, true )
 {
@@ -573,6 +574,11 @@ size_t NodeGraph::GetNodeCount() const
     return m_AllNodes.GetSize();
 }
 
+Array< Node* >& NodeGraph::GetGeneratorNodes()
+{
+    return m_GeneratorNodes;
+}
+
 // CreateCopyFileNode
 //------------------------------------------------------------------------------
 CopyFileNode * NodeGraph::CreateCopyFileNode( const AString & dstFileName )
@@ -630,6 +636,10 @@ ExecNode * NodeGraph::CreateExecNode( const AString & dstFileName,
 
     ExecNode * node = FNEW( ExecNode( fullPath, inputFiles, executable, arguments, workingDir, expectedReturnCode, preBuildDependencies, useStdOutAsOutput, isGenerator ) );
     AddNode( node );
+    if (isGenerator)
+    {
+        m_GeneratorNodes.Append( node );
+    }
     return node;
 }
 
