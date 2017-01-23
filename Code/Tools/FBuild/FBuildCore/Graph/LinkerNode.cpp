@@ -745,3 +745,39 @@ bool LinkerNode::CanUseResponseFile() const
 }
 
 //------------------------------------------------------------------------------
+
+Array< AString > LinkerNode::GetProcessInputs()
+{
+    Array< AString > ret;
+    Args fullArgs;
+    if ( !BuildArgs( fullArgs ) )
+    {
+        ASSERT(false);
+    }
+
+    ret.Append(fullArgs.GetRawArgs());
+
+    // use the exe launch dir as the working dir
+    const char * environment = FBuild::Get().GetEnvironmentString();
+    ret.Append( AString(environment?environment:""));
+
+    if (m_LinkerStampExe){
+
+        ret.Append(m_LinkerStampExe->GetName());
+        ret.Append(m_LinkerStampExeArgs);
+
+    }
+    return ret;
+}
+
+    
+void LinkerNode::HashSelf (xxHash64Stream& stream) const
+{
+    stream.Update(GetProcessInputs());
+}
+
+bool LinkerNode::SemanticEquals (const Node *rhs) const
+{
+    return GetProcessInputs()==rhs->GetProcessInputs();
+}
+

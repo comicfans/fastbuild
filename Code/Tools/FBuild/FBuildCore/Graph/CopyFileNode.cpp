@@ -132,3 +132,23 @@ void CopyFileNode::EmitCopyMessage() const
 }
 
 //------------------------------------------------------------------------------
+void CopyFileNode::HashSelf (xxHash64Stream& stream) const
+{
+    FileNode::HashSelf(stream);
+    stream.Update(m_Source);
+    stream.Update(m_Dest);
+    stream.Update(m_SourceBasePath);
+}
+    
+bool CopyFileNode::SemanticEquals (const Node *rhs) const
+{
+    if (!FileNode::SemanticEquals(rhs))
+    {
+        return false;
+    }
+
+    return m_Source==rhs.m_Source 
+        && m_Dest == rhs.m_Dest
+        && m_SourceBasePath == rhs.m_SourceBasePath
+}
+

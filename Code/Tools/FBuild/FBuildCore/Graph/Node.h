@@ -22,6 +22,7 @@ class IMetaData;
 class IOStream;
 class Job;
 class NodeGraph;
+class xxHash64Stream;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -223,6 +224,14 @@ protected:
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
+    //should be stable across different build (if node semantic not changed)
+    uint64_t SemanticHash () const ;
+    //add base class member to hash
+    virtual void HashSelf (xxHash64Stream& stream) const ;
+    //should be stable across different build (if semantic same)
+    virtual bool SemanticEquals (const Node *rhs) const ;
+
+    virtual void UpdateFrom (const Node *rhs);
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }

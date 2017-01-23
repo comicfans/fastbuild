@@ -86,17 +86,21 @@ public:
     void GetPDBName( AString & pdbName ) const;
 
     const char * GetObjExtension() const;
+protected:
+    virtual void HashSelf (xxHash64Stream& stream) const override;
+    virtual bool SemanticEquals (const Node *rhs) const override;
 private:
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
+    BuildResult DoBuildInternal( Array< AString > *processInputs, Job * job ) ;
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob ) override;
     virtual bool Finalize( NodeGraph & nodeGraph ) override;
 
-    BuildResult DoBuildMSCL_NoCache( Job * job, bool useDeoptimization );
-    BuildResult DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
+    BuildResult DoBuildMSCL_NoCache(Array< AString > *processInputs, Job * job, bool useDeoptimization );
+    BuildResult DoBuildWithPreProcessor(Array< AString > *processInputs, Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist );
     BuildResult DoBuildWithPreProcessor2( Job * job, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob );
-    BuildResult DoBuild_QtRCC( Job * job );
-    BuildResult DoBuildOther( Job * job, bool useDeoptimization );
+    BuildResult DoBuild_QtRCC( Array< AString > *processInputs, Job * job);
+    BuildResult DoBuildOther( Array< AString > *processInputs, Job * job, bool useDeoptimization );
 
     bool ProcessIncludesMSCL( const char * output, uint32_t outputSize );
     bool ProcessIncludesWithPreProcessor( Job * job );
@@ -126,7 +130,7 @@ private:
     bool BuildArgs( const Job * job, Args & fullArgs, Pass pass, bool useDeoptimization, bool useShowIncludes, const AString & overrideSrcFile = AString::GetEmpty() ) const;
 
     void ExpandCompilerForceUsing( Args & fullArgs, const AString & pre, const AString & post ) const;
-    bool BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
+    bool BuildPreprocessedOutput( Array< AString > *processInputs, const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     bool LoadStaticSourceFileForDistribution( const Args & fullArgs, Job * job, bool useDeoptimization ) const;
     void TransferPreprocessedData( const char * data, size_t dataSize, Job * job ) const;
     bool WriteTmpFile( Job * job, AString & tmpDirectory, AString & tmpFileName ) const;
@@ -150,7 +154,7 @@ private:
         ~CompileHelper();
 
         // start compilation
-        bool SpawnCompiler( Job * job, const AString & name, const AString & compiler, const Args & fullArgs, const char * workingDir = nullptr );
+        bool SpawnCompiler(Array< AString > *processInputs, Job * job, const AString & name, const AString & compiler, const Args & fullArgs, const char * workingDir=nullptr );
 
         // determine overall result
         inline int                      GetResult() const { return m_Result; }
@@ -170,6 +174,8 @@ private:
         uint32_t        m_ErrSize;
         int             m_Result;
     };
+
+    Array< AString > GetProcessInputs()const;
 
     // Exposed Properties
     friend class ObjectListNode;

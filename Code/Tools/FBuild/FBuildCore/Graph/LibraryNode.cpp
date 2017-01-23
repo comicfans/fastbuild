@@ -377,3 +377,43 @@ bool LibraryNode::CanUseResponseFile() const
 }
 
 //------------------------------------------------------------------------------
+
+Array< AString > LibraryNode::GetProcessInputs()const
+{
+    Array < AString > ret;
+
+    ret.Append(GetLibrarian()->GetName());
+
+    Args fullArgs;
+    if ( !BuildArgs( fullArgs ) )
+    {
+        ASSERT (false);
+    }
+
+    ret.Append(fullArgs.GetRawArgs());
+
+    const char * workingDir = nullptr;
+
+    const char * environment = FBuild::Get().GetEnvironmentString();
+
+    ret.Append(AString(environment?environment:""));
+
+    return ret;
+}
+    
+void LibraryNode::HashSelf (xxHash64Stream& stream) const
+{
+    stream.Update(GetProcessInputs());
+}
+    //should be stable across different build (if semantic same)
+bool SemanticEquals (const Node *rhs) const
+{
+    if (!ObjectListNode::SemanticEquals(rhs))
+    {
+        return false;
+    }
+
+    return GetProcessInputs() == other.GetProcessInputs();
+}
+
+

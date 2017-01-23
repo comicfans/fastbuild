@@ -176,3 +176,40 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
 }
 
 //------------------------------------------------------------------------------
+
+    
+void CompilerNode::HashSelf(xxHash64Stream& stream) const
+{
+    FileNode::ContinueHash(stream);
+
+    stream.Update(m_ExtraFiles);
+    stream.Update(m_CustomEnvironmentVariables);
+
+    // dist/none-dist should be part of hash?
+    //stream.Update(m_AllowDistribution);
+    stream.Update(m_VS2012EnumBugFix);
+    stream.Update(m_ClangRewriteIncludes);
+    stream.Update(m_ExecutableRootPath);
+    stream.Update(m_SimpleDistributionMode);
+
+    //ToolManifest    m_Manifest; TODO
+
+}
+
+    
+bool CompilerNode::SemanticEquals (const Node *rhs) const 
+{
+    if (!FileNode::SemanticEquals(rhs)) {
+        return false;
+    }
+
+    return m_ExtraFiles==rhs.m_ExtraFiles
+        && m_CustomEnvironmentVariables == rhs.m_CustomEnvironmentVariables
+        && m_VS2012EnumBugFix== rhs.m_VS2012EnumBugFix
+        && m_ClangRewriteIncludes == rhs.m_ClangRewriteIncludes
+        && m_ExecutableRootPath == rhs.m_ExecutableRootPath
+        && m_SimpleDistributionMode == rhs.m_SimpleDistributionMode;
+
+    //ToolManifest TODO
+}
+

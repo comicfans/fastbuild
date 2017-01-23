@@ -50,6 +50,7 @@
 #include "Core/Tracing/Tracing.h"
 
 #include <string.h>
+#include <map>
 
 // Defines
 //------------------------------------------------------------------------------
@@ -1690,3 +1691,60 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 #endif
 
 //------------------------------------------------------------------------------
+
+
+bool NodeGraph::MigrateFrom ( const NodeGraph* old)
+{
+    bool noCollision=true;
+    typedef std::map<uint64_t,Node*> HashNodes;
+    HashNodes oldNodes;
+    int oldNumber = rhs.m_Nodes.GetSize();
+    for (int i =0;i<oldNumber;++i)
+    {
+        Node* node =old.m_Nodes[i];
+        uint64_t hash = node->SemanticHash();
+        if (oldNodes.find(hash)!=oldNodes.end())
+        {
+            //hash has collision 
+            //or we're confused
+        
+            noCollision=false;
+            FLOG("hash collision");
+        }
+        oldNodes[hash]=node;
+    }
+
+    std::set<Node*> equalCache;
+
+    int myNumber = m_Nodes.GetSize();
+    for (int i=0;i<myNumber;++i)
+    {
+        Node* myNode = m_Nodes[i];
+        uint64_t hash = myNode ->HashValue();
+
+        HashNodes::iterator equalPos = oldNodes.find(hash);
+
+        if (equalPos == oldNodes.end())
+        {
+            //not found
+            continue;
+        }
+
+        if (!myNode->SemanticEquals(equalPos->second))
+        {
+            //same hash but different node?
+            FLOG("hash collision");
+            noCollision=false;
+            continue;
+        }
+            
+
+        myNode->CopyFrom (equalOne);
+        equalCache.insert(myNode);
+
+        oldNodes.erase(equalPos);
+    }
+
+    return noCollision;
+}
+

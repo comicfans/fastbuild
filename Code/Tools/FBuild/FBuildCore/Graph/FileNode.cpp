@@ -57,3 +57,10 @@ FileNode::~FileNode() = default;
 }
 
 //------------------------------------------------------------------------------
+
+void FileNode::HashSelf (xxHash64Stream& stream) const
+{
+    Node::HashSelf(stream);
+    stream.Update(m_Name);
+}
+

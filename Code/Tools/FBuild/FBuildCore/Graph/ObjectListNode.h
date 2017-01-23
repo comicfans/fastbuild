@@ -53,6 +53,12 @@ protected:
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
     ObjectNode * CreateObjectNode( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const uint32_t flags, const AString & compilerOptions, const AString & compilerOptionsDeoptimized, const AString & objectName, const AString & objectInput, const AString & pchObjectName = AString::GetEmpty() );
 
+    //add base class member to hash
+    virtual void HashSelf (xxHash64Stream& stream) const ;
+    //should be stable across different build (if semantic same)
+    virtual bool SemanticEquals (const Node *rhs) const ;
+
+
     // Exposed Properties
     AString             m_Compiler;
     AString             m_CompilerOptions;
