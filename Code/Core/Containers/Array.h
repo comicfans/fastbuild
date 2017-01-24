@@ -442,6 +442,29 @@ Array< T > & Array< T >::operator = ( const Array< T > & other )
     return *this;
 }
 
+template < class T >
+bool operator == ( const Array< T >& lhs, const Array< T > & rhs)
+{
+    if (&lhs == &rhs)
+    {
+        return true;
+    }
+
+    size_t size=lhs.GetSize();
+
+    if(rhs.GetSize()!=size)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < size; ++i) {
+        if (lhs[i]!=rhs[i]) {
+            return false;
+        }
+    }
+    
+    return true;
+}
 // Grow
 //------------------------------------------------------------------------------
 template < class T >
