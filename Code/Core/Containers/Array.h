@@ -17,7 +17,7 @@ class Array
 {
 public:
     explicit Array();
-    explicit Array( const Array< T > & other );
+    Array( const Array< T > & other );
     explicit Array( const T * begin, const T * end );
     explicit Array( size_t initialCapacity, bool resizeable = false );
     ~Array();
