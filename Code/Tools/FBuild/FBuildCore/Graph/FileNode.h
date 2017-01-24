@@ -23,6 +23,8 @@ public:
 protected:
     virtual BuildResult DoBuild( Job * job ) override;
 
+    virtual void HashSelf(xxHash64Stream& stream) const override;
+
     friend class Client;
 };
 

@@ -6,14 +6,17 @@
 //------------------------------------------------------------------------------
 #include "Core/Env/Types.h"
 #include "Core/Mem/MemTracker.h"
+#include <new>
 
 // Placement new/delete
 //------------------------------------------------------------------------------
 #define INPLACE_NEW new
-inline void * operator new( size_t, void * ptr ) { return ptr; }
-inline void * operator new[]( size_t, void * ptr ) { return ptr; }
-inline void operator delete( void *, void * ) {}
-inline void operator delete[]( void *, void * ) {}
+#ifndef new
+//inline void * operator new( size_t, void * ptr ) { return ptr; }
+//inline void * operator new[]( size_t, void * ptr ) { return ptr; }
+//inline void operator delete( void *, void * ) noexcept {}
+//inline void operator delete[]( void *, void * ) noexcept {}
+#endif
 
 // new/delete
 //------------------------------------------------------------------------------
@@ -46,14 +49,15 @@ void Free( void * ptr );
 // global new/delete
 //------------------------------------------------------------------------------
 #if defined( MEMTRACKER_ENABLED )
-    void * operator new( size_t size, const char * file, int line );
-    void * operator new[]( size_t size, const char * file, int line );
-    void operator delete( void * ptr, const char *, int );
-    void operator delete[]( void * ptr, const char *, int );
+    void * operator new( size_t size, const char * file, int line ) ;
+    void * operator new[]( size_t size, const char * file, int line ) ;
+    void operator delete( void * ptr, const char *, int ) noexcept;
+    void operator delete[]( void * ptr, const char *, int ) noexcept;
+#elif not defined (new)
+//void * operator new( size_t size ) ;
+//void * operator new[]( size_t size ) ;
+//void operator delete( void * ptr ) noexcept;
+//void operator delete[]( void * ptr ) noexcept;
 #endif
-void * operator new( size_t size );
-void * operator new[]( size_t size );
-void operator delete( void * ptr );
-void operator delete[]( void * ptr );
 
 //------------------------------------------------------------------------------

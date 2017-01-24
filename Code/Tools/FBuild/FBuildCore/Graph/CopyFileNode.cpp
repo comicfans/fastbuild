@@ -16,6 +16,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
 
 // REFLECTION
 //------------------------------------------------------------------------------
@@ -132,3 +133,25 @@ void CopyFileNode::EmitCopyMessage() const
 }
 
 //------------------------------------------------------------------------------
+void CopyFileNode::HashSelf (xxHash64Stream& stream) const
+{
+    FileNode::HashSelf(stream);
+    stream.Update(m_Source);
+    stream.Update(m_Dest);
+    stream.Update(m_SourceBasePath);
+}
+    
+bool CopyFileNode::SemanticEquals (const Node *rhs) const
+{
+    if (!FileNode::SemanticEquals(rhs))
+    {
+        return false;
+    }
+
+    const CopyFileNode* cast=rhs->CastTo<CopyFileNode>();
+
+    return m_Source==cast->m_Source 
+        && m_Dest == cast->m_Dest
+        && m_SourceBasePath == cast->m_SourceBasePath;
+}
+

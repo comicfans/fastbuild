@@ -25,6 +25,7 @@
 #include "Core/Process/Process.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -745,3 +746,52 @@ bool LinkerNode::CanUseResponseFile() const
 }
 
 //------------------------------------------------------------------------------
+
+Array< AString > LinkerNode::GetProcessInputs() const
+{
+    Array< AString > ret;
+    Args fullArgs;
+    if ( !BuildArgs( fullArgs ) )
+    {
+        ASSERT(false);
+    }
+
+    ret.Append(m_Linker);
+    ret.Append(fullArgs.GetRawArgs());
+
+    // use the exe launch dir as the working dir
+    const char * environment = FBuild::Get().GetEnvironmentString();
+    ret.Append( AString(environment?environment:""));
+
+    if (m_LinkerStampExe){
+
+        ret.Append(m_LinkerStampExe->GetName());
+        ret.Append(m_LinkerStampExeArgs);
+
+    }
+    return ret;
+}
+
+    
+void LinkerNode::HashSelf (xxHash64Stream& stream) const
+{
+
+    FileNode::HashSelf(stream);
+
+    Array < AString > processInputs=GetProcessInputs();
+    for(size_t i=0,size=processInputs.GetSize();i<size;++i)
+    {
+        FLOG_INFO("add hash:%s",processInputs[i].Get());
+    }
+    stream.Update(processInputs);
+}
+
+bool LinkerNode::SemanticEquals (const Node *rhs) const
+{
+    if (!FileNode::SemanticEquals(rhs))
+    {
+        return false;
+    }
+    return GetProcessInputs()==((const LinkerNode*)rhs)->GetProcessInputs();
+}
+
