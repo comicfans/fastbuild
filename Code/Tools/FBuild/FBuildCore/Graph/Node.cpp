@@ -442,7 +442,7 @@ bool Node::DetermineNeedToBuild( bool forceClean ) const
     }
 
     ASSERT( n );
-    if ( n )
+    if ( n && nodeType != Node::FILE_NODE )
     {
         // set stamp
         n->m_Stamp = stamp;
