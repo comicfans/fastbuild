@@ -26,6 +26,7 @@
 
 // Core
 #include "Core/Env/Env.h"
+#include "Core/Containers/Array.h"
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/FileIO/PathUtils.h"
@@ -200,27 +201,37 @@ ObjectNode::~ObjectNode()
 //------------------------------------------------------------------------------
 /*virtual*/ Node::BuildResult ObjectNode::DoBuild( Job * job )
 {
+    return DoBuildInternal(nullptr,job);
+}
+
+Node::BuildResult ObjectNode::DoBuildInternal ( Array<AString> * processInputs, Job * job )
+{
     // delete previous file
     if ( FileIO::FileExists( GetName().Get() ) )
     {
-        if ( FileIO::FileDelete( GetName().Get() ) == false )
+        if (!processInputs)
         {
-            FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
-            return NODE_RESULT_FAILED;
+            if ( FileIO::FileDelete( GetName().Get() ) == false )
+            {
+                FLOG_ERROR( "Failed to delete file before build '%s'", GetName().Get() );
+                return NODE_RESULT_FAILED;
+            }
         }
     }
     if ( GetFlag( FLAG_MSVC ) && GetFlag( FLAG_CREATING_PCH ) )
     {
-        if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
+        if (!processInputs)
         {
-            if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+            if ( FileIO::FileExists( m_PCHObjectFileName.Get() ) )
             {
-                FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
-                return NODE_RESULT_FAILED;
+                if ( FileIO::FileDelete( m_PCHObjectFileName.Get() ) == false )
+                {
+                    FLOG_ERROR( "Failed to delete file before build '%s'", m_PCHObjectFileName.Get() );
+                    return NODE_RESULT_FAILED;
+                }
             }
+            m_PCHCacheKey = 0; // Will be set correctly if we end up using the cache
         }
-
-        m_PCHCacheKey = 0; // Will be set correctly if we end up using the cache
     }
 
     // using deoptimization?
@@ -241,20 +252,20 @@ ObjectNode::~ObjectNode()
 
     if ( usePreProcessor || useSimpleDist )
     {
-        return DoBuildWithPreProcessor( job, useDeoptimization, useCache, useSimpleDist );
+        return DoBuildWithPreProcessor( processInputs, job, useDeoptimization, useCache, useSimpleDist );
     }
 
     if ( GetFlag( FLAG_MSVC ) )
     {
-        return DoBuildMSCL_NoCache( job, useDeoptimization );
+        return DoBuildMSCL_NoCache( processInputs, job, useDeoptimization );
     }
 
     if ( GetFlag( FLAG_QT_RCC ))
     {
-        return DoBuild_QtRCC( job );
+        return DoBuild_QtRCC( processInputs, job );
     }
 
-    return DoBuildOther( job, useDeoptimization );
+    return DoBuildOther( processInputs, job, useDeoptimization );
 }
 
 // DoBuild_Remote
@@ -299,7 +310,7 @@ ObjectNode::~ObjectNode()
 
 // DoBuildMSCL_NoCache
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectNode::DoBuildMSCL_NoCache( Job * job, bool useDeoptimization )
+/*virtual*/ Node::BuildResult ObjectNode::DoBuildMSCL_NoCache( Array< AString >* processInputs, Job * job, bool useDeoptimization )
 {
     // Format compiler args string
     Args fullArgs;
@@ -313,9 +324,14 @@ ObjectNode::~ObjectNode()
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) ) // use response file for MSVC
+    if ( !ch.SpawnCompiler( processInputs, job, GetName(), GetCompiler()->GetName(), fullArgs ) ) // use response file for MSVC
     {
         return NODE_RESULT_FAILED; // SpawnCompiler has logged error
+    }
+
+    if (processInputs)
+    {
+        return NODE_RESULT_OK;
     }
 
     // Handle MSCL warnings if not already a failure
@@ -354,7 +370,7 @@ ObjectNode::~ObjectNode()
 
 // DoBuildWithPreProcessor
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
+Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Array<AString> *processInputs, Job * job, bool useDeoptimization, bool useCache, bool useSimpleDist )
 {
     Args fullArgs;
     const bool showIncludes( false );
@@ -366,9 +382,14 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor( Job * job, bool useDeopti
 
     if ( pass == PASS_PREPROCESSOR_ONLY )
     {
-        if ( BuildPreprocessedOutput( fullArgs, job, useDeoptimization ) == false )
+        if ( BuildPreprocessedOutput( processInputs, fullArgs, job, useDeoptimization ) == false )
         {
             return NODE_RESULT_FAILED; // BuildPreprocessedOutput will have emitted an error
+        }
+
+        if (processInputs)
+        {
+            return NODE_RESULT_OK;
         }
 
         // preprocessed ok, try to extract includes
@@ -543,7 +564,7 @@ Node::BuildResult ObjectNode::DoBuildWithPreProcessor2( Job * job, bool useDeopt
 
 // DoBuild_QtRCC
 //------------------------------------------------------------------------------
-Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
+Node::BuildResult ObjectNode::DoBuild_QtRCC( Array<AString>* processInputs, Job * job )
 {
     // spawn the process to gather dependencies
     {
@@ -559,9 +580,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         EmitCompilationMessage( fullArgs, false );
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+        if ( !ch.SpawnCompiler( processInputs, job, GetName(), GetCompiler()->GetName(), fullArgs) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
+        }
+
+        if (processInputs)
+        {
+            return NODE_RESULT_OK;
         }
 
         // get output
@@ -600,9 +626,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
         }
 
         CompileHelper ch;
-        if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+        if ( !ch.SpawnCompiler( processInputs, job, GetName(), GetCompiler()->GetName(), fullArgs ) )
         {
             return NODE_RESULT_FAILED; // compile has logged error
+        }
+
+        if (processInputs)
+        {
+            return NODE_RESULT_OK;
         }
     }
 
@@ -614,7 +645,7 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
 // DoBuildOther
 //------------------------------------------------------------------------------
-/*virtual*/ Node::BuildResult ObjectNode::DoBuildOther( Job * job, bool useDeoptimization )
+/*virtual*/ Node::BuildResult ObjectNode::DoBuildOther( Array< AString > *processInputs, Job * job, bool useDeoptimization )
 {
     // Format compiler args string
     Args fullArgs;
@@ -628,9 +659,14 @@ Node::BuildResult ObjectNode::DoBuild_QtRCC( Job * job )
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), GetCompiler()->GetName(), fullArgs ) )
+    if ( !ch.SpawnCompiler(processInputs, job, GetName(), GetCompiler()->GetName(), fullArgs) )
     {
         return NODE_RESULT_FAILED; // compile has logged error
+    }
+
+    if (processInputs)
+    {
+        return NODE_RESULT_OK;
     }
 
     // record new file time
@@ -1292,6 +1328,11 @@ bool ObjectNode::GetExtraCacheFilePath( const Job * job, AString & extraFileName
 //------------------------------------------------------------------------------
 void ObjectNode::EmitCompilationMessage( const Args & fullArgs, bool useDeoptimization, bool stealingRemoteJob, bool racingRemoteJob, bool useDedicatedPreprocessor, bool isRemote ) const
 {
+
+    if (m_MarkForHash)
+    {
+        return;
+    }
     // print basic or detailed output, depending on options
     // we combine everything into one string to ensure it is contiguous in
     // the output
@@ -1766,7 +1807,7 @@ void ObjectNode::ExpandCompilerForceUsing( Args & fullArgs, const AString & pre,
 
 // BuildPreprocessedOutput
 //------------------------------------------------------------------------------
-bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool useDeoptimization ) const
+bool ObjectNode::BuildPreprocessedOutput( Array< AString >* processInputs, const Args & fullArgs, Job * job, bool useDeoptimization ) const
 {
     const bool useDedicatedPreprocessor = ( GetDedicatedPreprocessor() != nullptr );
     EmitCompilationMessage( fullArgs, useDeoptimization, false, false, useDedicatedPreprocessor );
@@ -1774,7 +1815,7 @@ bool ObjectNode::BuildPreprocessedOutput( const Args & fullArgs, Job * job, bool
     // spawn the process
     CompileHelper ch( false ); // don't handle output (we'll do that)
     // TODO:A Add checks in BuildArgs for length of dedicated preprocessor
-    if ( !ch.SpawnCompiler( job, GetName(),
+    if ( !ch.SpawnCompiler(processInputs, job, GetName(),
          useDedicatedPreprocessor ? GetDedicatedPreprocessor()->GetName() : GetCompiler()->GetName(),
          fullArgs ) )
     {
@@ -2015,7 +2056,7 @@ bool ObjectNode::BuildFinalOutput( Job * job, const Args & fullArgs ) const
 
     // spawn the process
     CompileHelper ch;
-    if ( !ch.SpawnCompiler( job, GetName(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
+    if ( !ch.SpawnCompiler( nullptr, job, GetName(), compiler, fullArgs, workingDir.IsEmpty() ? nullptr : workingDir.Get() ) )
     {
         // did spawn fail, or did we spawn and fail to compile?
         if ( ch.GetResult() != 0 )
@@ -2062,7 +2103,9 @@ ObjectNode::CompileHelper::~CompileHelper() = default;
 
 // CompilHelper::SpawnCompiler
 //------------------------------------------------------------------------------
-bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
+bool ObjectNode::CompileHelper::SpawnCompiler( 
+                                               Array <AString> *processInputs,
+                                               Job * job,
                                                const AString & name,
                                                const AString & compiler,
                                                const Args & fullArgs,
@@ -2072,6 +2115,15 @@ bool ObjectNode::CompileHelper::SpawnCompiler( Job * job,
     if ( ( job->IsLocal() == false ) && ( job->GetToolManifest() ) )
     {
         environmentString = job->GetToolManifest()->GetRemoteEnvironmentString();
+    }
+
+    if (processInputs)
+    {
+        processInputs->Append(compiler);
+        processInputs->Append(fullArgs.GetRawArgs());
+        processInputs->Append( AString(workingDir?workingDir:"") );
+        processInputs->Append( AString(environmentString?environmentString:""));
+        return true;
     }
 
     // spawn the process
@@ -2310,3 +2362,46 @@ bool ObjectNode::CanUseResponseFile() const
 }
 
 //------------------------------------------------------------------------------
+    
+void ObjectNode::HashSelf (xxHash64Stream& stream) const
+{
+    Array <AString> processInputs;
+
+    Job* fake = FNEW( Job(const_cast<ObjectNode*>(this)) );
+    ObjectNode* me=const_cast<ObjectNode*>(this);
+    me->m_MarkForHash = true;
+    me->DoBuildInternal(&processInputs,fake);
+    me->m_MarkForHash = false;
+    FDELETE (fake);
+
+    for(size_t i=0,size=processInputs.GetSize();i<size;++i)
+    {
+        FLOG_INFO("add hash:%s",processInputs[i].Get());
+    }
+
+    stream.Update(processInputs);
+}
+
+bool ObjectNode::SemanticEquals (const Node *rhs) const
+{
+    Array <AString> processInputs;
+
+    Job* fake = FNEW( Job(const_cast<ObjectNode*>(this)) );
+    ObjectNode* me=const_cast<ObjectNode*>(this);
+    me->m_MarkForHash = true;
+    me->DoBuildInternal(&processInputs,fake);
+    me->m_MarkForHash = false;
+
+
+    Array <AString> rhsInputs;
+    ObjectNode* castRhs=const_cast<ObjectNode*>(rhs->CastTo<ObjectNode>());
+    castRhs->m_MarkForHash = true;
+    castRhs->DoBuildInternal(&rhsInputs,fake);
+    castRhs->m_MarkForHash = false;
+    FDELETE (fake);
+
+    return processInputs == rhsInputs;
+}
+
+    
+

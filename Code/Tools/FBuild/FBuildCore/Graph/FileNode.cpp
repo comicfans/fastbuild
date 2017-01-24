@@ -13,6 +13,7 @@
 #include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/FileStream.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
 
 // CONSTRUCTOR
 //------------------------------------------------------------------------------
@@ -61,3 +62,10 @@ FileNode::~FileNode() = default;
 }
 
 //------------------------------------------------------------------------------
+
+void FileNode::HashSelf (xxHash64Stream& stream) const
+{
+    Node::HashSelf(stream);
+    stream.Update(m_Name);
+}
+

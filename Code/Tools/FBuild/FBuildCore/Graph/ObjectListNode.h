@@ -45,6 +45,9 @@ public:
 protected:
     friend class FunctionObjectList;
 
+    virtual void HashSelf(xxHash64Stream& stream)const override;
+    virtual bool SemanticEquals(const Node* rhs)const override;
+
     virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -63,6 +66,7 @@ protected:
                                    const AString & objectName,
                                    const AString & objectInput,
                                    const AString & pchObjectName );
+
 
     // Exposed Properties
     AString             m_Compiler;

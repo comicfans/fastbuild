@@ -190,6 +190,9 @@ public:
     static void UpdateBuildStatus( const Node * node,
                                    uint32_t & nodesBuiltTime,
                                    uint32_t & totalNodeTime );
+
+    bool MigrateFrom( const NodeGraph* rhs );
+
 private:
     friend class FBuild;
 

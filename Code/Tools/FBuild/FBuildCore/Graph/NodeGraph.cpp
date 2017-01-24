@@ -50,6 +50,9 @@
 #include "Core/Tracing/Tracing.h"
 
 #include <string.h>
+#include <inttypes.h>
+#include <map>
+#include <set>
 
 // Defines
 //------------------------------------------------------------------------------
@@ -129,6 +132,8 @@ NodeGraph::~NodeGraph()
                 FDELETE( oldNG );
                 return nullptr;
             }
+
+            newNG->MigrateFrom(oldNG);
 
             // TODO: Migrate old DB info to new DB
             FDELETE( oldNG );
@@ -1709,3 +1714,66 @@ uint32_t NodeGraph::GetLibEnvVarHash() const
 #endif
 
 //------------------------------------------------------------------------------
+
+
+bool NodeGraph::MigrateFrom ( const NodeGraph* old)
+{
+    bool noCollision=true;
+    typedef std::map<uint64_t,Node*> HashNodes;
+    HashNodes oldNodes;
+    int oldNumber = old->m_AllNodes.GetSize();
+    for (int i =0;i<oldNumber;++i)
+    {
+        Node* node =old->m_AllNodes[i];
+
+        uint64_t hash = node->SemanticHash();
+        FLOG_INFO("old node :%s hash: %" PRIu64,node->GetName().Get(),hash);
+        if (oldNodes.find(hash)!=oldNodes.end())
+        {
+            //hash has collision 
+            //or we're confused
+        
+            noCollision=false;
+            FLOG_INFO("hash collision");
+        }
+        oldNodes[hash]=node;
+    }
+
+    bool forceClean = FBuild::Get().GetOptions().m_ForceCleanBuild;
+
+    for (size_t i=0;i<m_AllNodes.GetSize();++i)
+    {
+        Node* myNode = m_AllNodes[i];
+
+        myNode->DoDynamicDependencies(*this,forceClean);
+        uint64_t hash = myNode ->SemanticHash();
+
+        FLOG_INFO("new node :%s hash: %" PRIu64,myNode->GetName().Get(),hash);
+
+        HashNodes::iterator equalPos = oldNodes.find(hash);
+
+        if (equalPos == oldNodes.end())
+        {
+            FLOG_INFO("cache miss for %s",myNode->GetName().Get());
+            //not found
+            continue;
+        }
+
+        if (!myNode->SemanticEquals(equalPos->second))
+        {
+            FLOG_INFO("cache hit but semantic diff %s",myNode->GetName().Get());
+            //same hash but different node?
+            noCollision=false;
+            continue;
+        }
+
+
+        FLOG_INFO("preseve result for %s",myNode->GetName().Get());
+        myNode->UpdateFrom (equalPos->second);
+
+        oldNodes.erase(equalPos);
+    }
+
+    return noCollision;
+}
+

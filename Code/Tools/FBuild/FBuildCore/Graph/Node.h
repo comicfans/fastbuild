@@ -22,6 +22,7 @@ class IMetaData;
 class IOStream;
 class Job;
 class NodeGraph;
+class xxHash64Stream;
 
 // Defines
 //------------------------------------------------------------------------------
@@ -188,6 +189,11 @@ public:
         inline void MarkAsSaved() const { m_IsSaved = true; }
     #endif
 
+    //should be stable across different build (if node semantic not changed)
+    uint64_t SemanticHash () const ;
+
+    //should be stable across different build (if semantic same)
+    virtual bool SemanticEquals (const Node *rhs) const ;
 protected:
     friend class FBuild;
     friend struct FBuildStats;
@@ -223,6 +229,10 @@ protected:
     virtual BuildResult DoBuild( Job * job );
     virtual BuildResult DoBuild2( Job * job, bool racingRemoteJob );
     virtual bool Finalize( NodeGraph & nodeGraph );
+    //add base class member to hash
+    virtual void HashSelf (xxHash64Stream& stream) const ;
+
+    virtual void UpdateFrom (const Node *rhs);
 
     inline void     SetLastBuildTime( uint32_t ms ) { m_LastBuildTimeMs = ms; }
     inline void     AddProcessingTime( uint32_t ms ){ m_ProcessingTime += ms; }

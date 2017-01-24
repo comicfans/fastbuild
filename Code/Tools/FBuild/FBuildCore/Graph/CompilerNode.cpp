@@ -14,6 +14,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
 
 
 // Reflection
@@ -176,3 +177,42 @@ bool CompilerNode::DetermineNeedToBuild( bool forceClean ) const
 }
 
 //------------------------------------------------------------------------------
+
+    
+void CompilerNode::HashSelf(xxHash64Stream& stream) const
+{
+    FileNode::HashSelf(stream);
+
+    stream.Update(m_ExtraFiles);
+    stream.Update(m_CustomEnvironmentVariables);
+
+    // dist/none-dist should be part of hash?
+    //stream.Update(m_AllowDistribution);
+    stream.Update(m_VS2012EnumBugFix);
+    stream.Update(m_ClangRewriteIncludes);
+    stream.Update(m_ExecutableRootPath);
+    stream.Update(m_SimpleDistributionMode);
+
+    //ToolManifest    m_Manifest; TODO
+
+}
+
+    
+bool CompilerNode::SemanticEquals (const Node *rhs) const 
+{
+    if (!FileNode::SemanticEquals(rhs)) {
+        return false;
+    }
+
+    const CompilerNode* cast=rhs->CastTo<CompilerNode>();
+
+    return m_ExtraFiles==cast->m_ExtraFiles
+        && m_CustomEnvironmentVariables == cast->m_CustomEnvironmentVariables
+        && m_VS2012EnumBugFix== cast->m_VS2012EnumBugFix
+        && m_ClangRewriteIncludes == cast->m_ClangRewriteIncludes
+        && m_ExecutableRootPath == cast->m_ExecutableRootPath
+        && m_SimpleDistributionMode == cast->m_SimpleDistributionMode;
+
+    //ToolManifest TODO
+}
+
