@@ -43,6 +43,7 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/CRC32.h"
+#include "Core/Math/xxHash.h"
 #include "Core/Profile/Profile.h"
 #include "Core/Reflection/ReflectedProperty.h"
 #include "Core/Strings/AStackString.h"
@@ -1014,3 +1015,33 @@ bool Node::IsGenerator() const
 {
     return false;
 }
+
+    
+uint64_t Node::SemanticHash() const
+{
+    xxHash64Stream stream;
+    HashSelf(stream);
+    return stream.Digest();
+}
+
+void Node::HashSelf (xxHash64Stream& hash) const
+{
+    //do not include name because only file node should consider 
+    //same name is same
+    hash.Update(m_Type);
+}
+
+
+bool Node::SemanticEquals(const Node * rhs) const 
+{
+    //do not compare name
+    return m_Type == rhs->m_Type;
+}
+
+void Node::UpdateFrom (const Node* rhs)
+{
+    m_Stamp = rhs->m_Stamp;
+    m_LastBuildTimeMs = rhs->m_LastBuildTimeMs;
+    m_ProcessingTime = rhs->m_ProcessingTime;
+}
+

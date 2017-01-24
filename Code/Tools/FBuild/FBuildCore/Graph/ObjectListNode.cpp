@@ -24,6 +24,10 @@
 #include "Core/FileIO/IOStream.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
+
+#include <map>
+#include <inttypes.h>
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -739,3 +743,77 @@ const char * ObjectListNode::GetObjExtension() const
 }
 
 //------------------------------------------------------------------------------
+    
+std::map<uint64_t,const Node*> ConvertToMap(const Dependencies& deps)
+{
+    std::map<uint64_t,const Node*> ret;
+
+    for(size_t i=0;i<deps.GetSize();++i)
+    {
+        const Node* p = deps[i].GetNode();
+        ret[p->SemanticHash()]=p;
+    }
+
+    if(ret.size()!=deps.GetSize())
+    {
+        FLOG_WARN("hash collision");
+    }
+
+    return ret;
+}
+
+void ObjectListNode::HashSelf(xxHash64Stream& stream)const
+{
+    std::map<uint64_t, const Node*> map = ConvertToMap(m_DynamicDependencies);
+
+    for(std::map<uint64_t,const Node*>::const_iterator it = map.cbegin();
+            it!=map.cend();++it)
+    {
+        FLOG_INFO("hash add %" PRIu64,it->first);
+        stream.Update(it->first);
+    }
+
+}
+    
+bool ObjectListNode::SemanticEquals(const Node* rhs)const
+{
+    if ( !Node::SemanticEquals(rhs))
+    {
+        return false;
+    }
+
+    const ObjectListNode *castRhs = rhs->CastTo<const ObjectListNode>();
+
+    if (m_DynamicDependencies.GetSize()!=castRhs->m_DynamicDependencies.GetSize())
+    {
+        return false;
+    }
+
+    std::map<uint64_t, const Node*> myMap = ConvertToMap(m_DynamicDependencies);
+    std::map<uint64_t, const Node*> hisMap = ConvertToMap(castRhs->m_DynamicDependencies);
+
+    if(myMap.size()!=hisMap.size())
+    {
+        return false;
+    }
+
+
+    for(std::map<uint64_t,const Node*>::const_iterator it = myMap.cbegin();
+            it!=myMap.cend();++it)
+    {
+        std::map<uint64_t,const Node*>::const_iterator his = hisMap.find(it->first);
+        if(his==hisMap.end())
+        {
+            return false;
+        }
+
+        if (!it->second->SemanticEquals(his->second))
+        {
+            return false;
+        }
+    }
+
+    return true;
+    
+}
+

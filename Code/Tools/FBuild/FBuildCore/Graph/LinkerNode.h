@@ -70,6 +70,10 @@ protected:
 
     bool CanUseResponseFile() const;
 
+    virtual void HashSelf (xxHash64Stream& stream) const override;
+    virtual bool SemanticEquals (const Node *rhs) const override;
+
+
     AString m_LinkerType;
     AString m_Linker;
     AString m_LinkerArgs;
@@ -79,6 +83,8 @@ protected:
     AString m_ImportLibName;
     const Node * m_LinkerStampExe;
     AString m_LinkerStampExeArgs;
+private:
+    Array< AString > GetProcessInputs() const;
 };
 
 //------------------------------------------------------------------------------

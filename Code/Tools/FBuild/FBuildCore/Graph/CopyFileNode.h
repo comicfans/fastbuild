@@ -28,6 +28,11 @@ public:
 
     FileNode * GetSourceNode() const { return m_StaticDependencies[0].GetNode()->CastTo< FileNode >(); }
 
+protected:
+
+    void HashSelf (xxHash64Stream& stream) const ;
+    virtual bool SemanticEquals (const Node *rhs) const ;
+
 private:
     virtual BuildResult DoBuild( Job * job ) override;
 

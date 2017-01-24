@@ -26,6 +26,7 @@
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Process/Process.h"
 #include "Core/Strings/AStackString.h"
+#include "Core/Math/xxHash.h"
 
 // Reflection
 //------------------------------------------------------------------------------
@@ -377,3 +378,43 @@ bool LibraryNode::CanUseResponseFile() const
 }
 
 //------------------------------------------------------------------------------
+
+Array< AString > LibraryNode::GetProcessInputs()const
+{
+    Array < AString > ret;
+
+    ret.Append(GetLibrarian()->GetName());
+
+    Args fullArgs;
+    if ( !BuildArgs( fullArgs ) )
+    {
+        ASSERT (false);
+    }
+
+    ret.Append(fullArgs.GetRawArgs());
+
+    const char * environment = FBuild::Get().GetEnvironmentString();
+
+    ret.Append(AString(environment?environment:""));
+
+    return ret;
+}
+    
+void LibraryNode::HashSelf (xxHash64Stream& stream) const
+{
+    ObjectListNode::HashSelf(stream);
+
+    stream.Update(GetProcessInputs());
+}
+    //should be stable across different build (if semantic same)
+bool LibraryNode::SemanticEquals (const Node *rhs) const
+{
+    if (!ObjectListNode::SemanticEquals(rhs))
+    {
+        return false;
+    }
+
+    return GetProcessInputs() == ((LibraryNode*)rhs)->GetProcessInputs();
+}
+
+
