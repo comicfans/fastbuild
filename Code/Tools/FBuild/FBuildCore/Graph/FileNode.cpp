@@ -23,6 +23,7 @@ FileNode::FileNode( const AString & fileName, uint32_t controlFlags )
     ASSERT( ( fileName.FindLast( ':' ) == nullptr ) ||
             ( fileName.FindLast( ':' ) == ( fileName.Get() + 1 ) ) );
 
+    m_Stamp = FileIO::GetFileLastWriteTime( m_Name );
     m_LastBuildTimeMs = 1; // very little work required
 }
 
