@@ -45,6 +45,9 @@ public:
 protected:
     friend class FunctionObjectList;
 
+    virtual void HashSelf(xxHash64Stream& stream)const override;
+    virtual bool SemanticEquals(const Node* rhs)const override;
+
     virtual bool GatherDynamicDependencies( NodeGraph & nodeGraph, bool forceClean );
     virtual bool DoDynamicDependencies( NodeGraph & nodeGraph, bool forceClean ) override;
     virtual BuildResult DoBuild( Job * job ) override;
@@ -52,6 +55,7 @@ protected:
     // internal helpers
     bool CreateDynamicObjectNode( NodeGraph & nodeGraph, Node * inputFile, const AString & baseDir, bool isUnityNode = false, bool isIsolatedFromUnityNode = false );
     ObjectNode * CreateObjectNode( NodeGraph & nodeGraph, const BFFIterator & iter, const Function * function, const uint32_t flags, const AString & compilerOptions, const AString & compilerOptionsDeoptimized, const AString & objectName, const AString & objectInput, const AString & pchObjectName = AString::GetEmpty() );
+
 
     // Exposed Properties
     AString             m_Compiler;

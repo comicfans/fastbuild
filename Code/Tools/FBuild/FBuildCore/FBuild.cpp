@@ -280,22 +280,12 @@ bool FBuild::CheckGenerator()
         return false;
     }
 
+    SaveDependencyGraph(m_DependencyGraphFile.Get());
+
+    //after rebuild,save previous db
+
     //generator build ok
     bool result = ReloadBff();
-
-    //bff reload leads every node out of date,
-    //but generator targets should be marked as up to date
-    //(although  generator targets maybe changed , 
-    //still delay re-generate to next time)
-    Array< Node* >& newGenerators = m_DependencyGraph->GetGeneratorNodes();
-    const size_t newNumGenerators = newGenerators.GetSize();
-
-    for ( size_t i=0; i<newNumGenerators; ++i )
-    {
-        Node* generator = newGenerators[i];
-        generator->m_Stamp = FileIO::GetFileLastWriteTime( generator->m_Name );
-        generator->m_State = Node::UP_TO_DATE;
-    }
     
     return result;
 }

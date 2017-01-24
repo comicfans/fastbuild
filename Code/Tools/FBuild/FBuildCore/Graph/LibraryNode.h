@@ -41,6 +41,14 @@ public:
         LIB_FLAG_GREENHILLS_AX=0x08, // Greenhills (WiiU) ax.exe
     };
     static uint32_t DetermineFlags( const AString & librarianName );
+
+protected:
+
+    //add base class member to hash
+    virtual void HashSelf (xxHash64Stream& stream) const ;
+    //should be stable across different build (if semantic same)
+    virtual bool SemanticEquals (const Node *rhs) const ;
+
 private:
     friend class FunctionLibrary;
 
@@ -55,6 +63,8 @@ private:
     inline bool GetFlag( Flag flag ) const { return ( ( m_LibrarianFlags & (uint32_t)flag ) != 0 ); }
 
     bool CanUseResponseFile() const;
+
+    Array< AString > GetProcessInputs() const;
 
     // Exposed Properties
     AString             m_Librarian;

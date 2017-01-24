@@ -35,6 +35,9 @@ public:
         inline bool IsVS2012EnumBugFixEnabled() const { return m_VS2012EnumBugFix; }
     #endif
     inline bool IsClangRewriteIncludesEnabled() const { return m_ClangRewriteIncludes; }
+protected:
+    void HashSelf(xxHash64Stream& stream) const override;
+    virtual bool SemanticEquals (const Node *rhs) const override;
 private:
     virtual bool DetermineNeedToBuild( bool forceClean ) const override;
     virtual BuildResult DoBuild( Job * job ) override;
