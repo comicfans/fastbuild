@@ -222,6 +222,10 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         return LoadResult::OK_BFF_CHANGED;
     }
 
+    //even bff file may changed, we still load graph
+    //for migrate
+    bool bffChanged =false;
+
     // check if any files used have changed
     for ( size_t i=0; i<usedFiles.GetSize(); ++i )
     {
@@ -255,7 +259,7 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
         }
 
         FLOG_WARN( "BFF file '%s' has changed (reparsing will occur).", fileName.Get() );
-        return LoadResult::OK_BFF_CHANGED;
+        bffChanged = true;
     }
 
     m_UsedFiles = usedFiles;
@@ -365,6 +369,11 @@ NodeGraph::LoadResult NodeGraph::Load( IOStream & stream, const char * nodeGraph
     {
         ASSERT( m_AllNodes[ i ] ); // each node was loaded
         ASSERT( m_AllNodes[ i ]->GetIndex() == i ); // index was correctly persisted
+    }
+
+    if (bffChanged)
+    {
+        return LoadResult::OK_BFF_CHANGED;
     }
 
     // Everything OK - propagate global settings
