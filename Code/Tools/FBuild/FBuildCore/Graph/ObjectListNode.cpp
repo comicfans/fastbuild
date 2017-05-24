@@ -769,7 +769,8 @@ bool ObjectListNode::SemanticEquals(const Node* rhs)const
         return false;
     }
 
-    const ObjectListNode *castRhs = rhs->CastTo<const ObjectListNode>();
+    //we may cast a LibraryNode, do not use CastTo
+    const ObjectListNode *castRhs = (const ObjectListNode *)rhs;
 
     if (m_DynamicDependencies.GetSize()!=castRhs->m_DynamicDependencies.GetSize())
     {
