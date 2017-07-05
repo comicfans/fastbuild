@@ -39,11 +39,9 @@ void MemDebug::FillMem( void * ptr, const size_t size, const uint32_t pattern )
                             (char)( ( pattern & 0x00FF0000 ) >> 16 ) };
         const char * b = bytes;
         char * cit = static_cast< char * >( static_cast< void * >( it ) );
-        switch( remainder )
+        for ( size_t i = 0; i<remainder; ++i )
         {
-            case 3: *cit = *b; ++cit; ++b;
-            case 2: *cit = *b; ++cit; ++b;
-            case 1: *cit = *b;
+            cit[i]=b[i];
         }
     }
 }
