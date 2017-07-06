@@ -39,7 +39,10 @@ LinkerNode::LinkerNode( const AString & linkerOutputName,
                          const Dependencies & assemblyResources,
                          const AString & importLibName,
                          Node * linkerStampExe,
-                         const AString & linkerStampExeArgs )
+                         const AString & linkerStampExeArgs,
+                         const Dependencies & preBuildDependencies
+
+        )
 : FileNode( linkerOutputName, Node::FLAG_NONE )
 , m_Flags( flags )
 , m_AssemblyResources( assemblyResources )
@@ -62,6 +65,7 @@ LinkerNode::LinkerNode( const AString & linkerOutputName,
     m_StaticDependencies.Append( inputLibraries );
     m_StaticDependencies.Append( assemblyResources );
     m_StaticDependencies.Append( otherLibraries );
+    m_StaticDependencies.Append( preBuildDependencies );
 
     // manage optional LinkerStampExe
     if ( linkerStampExe )
@@ -73,6 +77,8 @@ LinkerNode::LinkerNode( const AString & linkerOutputName,
     m_LinkerType = linkerType;
     m_Linker = linker; // TODO:C This should be a node
     m_LinkerArgs = linkerArgs;
+
+    m_DynamicDependencies = preBuildDependencies;
 }
 
 // DESTRUCTOR
@@ -747,6 +753,7 @@ void LinkerNode::EmitStampMessage() const
     NODE_SAVE( m_ImportLibName );
     NODE_SAVE_NODE_LINK( m_LinkerStampExe );
     NODE_SAVE( m_LinkerStampExeArgs );
+    NODE_SAVE_DEPS( m_PreBuildDependencies);
 }
 
 // CanUseResponseFile

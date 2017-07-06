@@ -181,6 +181,8 @@ FunctionExecutable::FunctionExecutable()
         GetImportLibName( linkerOptions->GetString(), importLibName );
     }
 
+    Dependencies preBuildDependencies;
+    GetNodeList(nodeGraph,funcStartIter,".PreBuildDependencies",preBuildDependencies);
     // make node for exe
     Node * n( nullptr );
     if ( isADLL )
@@ -195,13 +197,12 @@ FunctionExecutable::FunctionExecutable()
                               assemblyResources,
                               importLibName,
                               linkerStampExe,
-                              linkerStampExeArgs );
+                              linkerStampExeArgs,
+                              preBuildDependencies );
     }
     else
     {
 
-        Dependencies preBuildDependencies;
-        GetNodeList(nodeGraph,funcStartIter,".PreBuildDependencies",preBuildDependencies);
         n = nodeGraph.CreateExeNode( linkerOutput,
                               libraryNodes,
                               otherLibraryNodes,

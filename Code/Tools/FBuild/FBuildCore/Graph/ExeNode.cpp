@@ -28,11 +28,9 @@ ExeNode::ExeNode( const AString & linkerOutputName,
                   const AString & linkerStampExeArgs,
                   const Dependencies & preBuildDependencies
         )
-: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs )
+: LinkerNode( linkerOutputName, inputLibraries, otherLibraries, linkerType, linker, linkerArgs, flags, assemblyResources, importLibName, linkerStampExe, linkerStampExeArgs , preBuildDependencies )
 {
     m_Type = EXE_NODE;
-
-    m_PreBuildDependencies = preBuildDependencies;
 }
 
 // DESTRUCTOR
@@ -65,6 +63,5 @@ ExeNode::~ExeNode() = default;
 void ExeNode::Save( IOStream & stream ) const
 {
     LinkerNode::Save(stream);
-    NODE_SAVE_DEPS( m_PreBuildDependencies);
 }
 //------------------------------------------------------------------------------

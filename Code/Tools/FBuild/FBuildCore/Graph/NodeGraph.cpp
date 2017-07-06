@@ -750,7 +750,8 @@ DLLNode * NodeGraph::CreateDLLNode( const AString & linkerOutputName,
                                     const Dependencies & assemblyResources,
                                     const AString & importLibName,
                                     Node * linkerStampExe,
-                                    const AString & linkerStampExeArgs )
+                                    const AString & linkerStampExeArgs,
+                                    const Dependencies & preBuildDependencies )
 {
     ASSERT( Thread::IsMainThread() );
     ASSERT( inputLibraries.IsEmpty() == false );
@@ -768,7 +769,8 @@ DLLNode * NodeGraph::CreateDLLNode( const AString & linkerOutputName,
                                   assemblyResources,
                                   importLibName,
                                   linkerStampExe,
-                                  linkerStampExeArgs ) );
+                                  linkerStampExeArgs,
+                                  preBuildDependencies ) );
     AddNode( node );
     return node;
 }

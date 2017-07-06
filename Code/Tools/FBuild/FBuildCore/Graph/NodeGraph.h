@@ -132,7 +132,8 @@ public:
                                    const Dependencies & assemblyResources,
                                    const AString & importLibName,
                                    Node * linkerStampExe,
-                                   const AString & linkerStampExeArgs );
+                                   const AString & linkerStampExeArgs,
+                                   const Dependencies & preBuildDependencies );
     ExeNode *       CreateExeNode( const AString & linkerOutputName,
                                    const Dependencies & inputLibraries,
                                    const Dependencies & otherLibraries,

@@ -24,7 +24,9 @@ public:
                       const Dependencies & assemblyResources,
                       const AString & importLibName,
                       Node * linkerStampExe,
-                      const AString & linkerStampExeArgs );
+                      const AString & linkerStampExeArgs ,
+                      const Dependencies & preBuildDependencies
+                      );
     virtual ~DLLNode();
 
     void GetImportLibName( AString & importLibName ) const;
